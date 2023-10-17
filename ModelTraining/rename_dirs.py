@@ -1,0 +1,1 @@
+rename_dirs(int(input("input move num")))

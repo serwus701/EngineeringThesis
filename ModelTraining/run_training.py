@@ -1,0 +1,1 @@
+model.fit(X_train, y_train, epochs=2000, callbacks=[tb_callback])
