@@ -1,4 +1,6 @@
 #include <windows.h>
+#include <mmdeviceapi.h>
+#include <endpointvolume.h>
 
 BOOL CALLBACK MonitorEnumProc(HMONITOR hMonitor, HDC hdcMonitor, LPRECT lprcMonitor, LPARAM dwData) {
     MONITORINFOEX mi;
@@ -22,7 +24,17 @@ void MoveWindowToRightScreen() {
     EnumDisplayMonitors(NULL, NULL, MonitorEnumProc, (LPARAM)hWnd);
 }
 
+void LockMyPC() {
+    LockWorkStation();
+}
+
+void ToggleMutePC() {
+    SendMessage(HWND_BROADCAST, WM_APPCOMMAND, 0, APPCOMMAND_VOLUME_MUTE * 0x10000);
+}
+
 int main() {
-    MoveWindowToRightScreen();
+//    MoveWindowToRightScreen();
+    LockMyPC();
+//    ToggleMutePC();
     return 0;
 }
