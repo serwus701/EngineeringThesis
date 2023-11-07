@@ -10,6 +10,6 @@ recorded_actions_availability = {
 
 button_colors = ['red', 'green']
 
-recordings = ['rec1', 'rec2', 'rec3', 'rec4']
+listed_recordings = ['rec1', 'rec2', 'rec3', 'rec4']
 
 app_status_toggle = True

@@ -1,8 +1,17 @@
 import tkinter as tk
-from tkinter import ttk
-from ttkthemes import ThemedTk
 import json
 import constans
+import add_new_recording
+import structures
+
+global new_recording_name_var
+global app_status_toggle
+global status
+global recorded_actions_availability
+global listed_recordings
+buttons_arr = []
+dropdowns_arr = []
+recordings_toggle = {}
 
 
 def read_status_from_json():
@@ -14,27 +23,13 @@ def read_status_from_json():
     return status_json
 
 
-status = read_status_from_json()
-global app_status_toggle
-app_status_toggle = status.get("app_status", constans.app_status_toggle)
-button_colors = constans.button_colors
-buttons = []
-dropdowns = []
-recordings = constans.recordings
-recorded_actions_availability = constans.recorded_actions_availability
-recorded_actions_availability.update(status.get("action_availability", {}))
-
-recordings_toggle = {}
-for recording in recordings:
-    recordings_toggle.update({recording: status.get("dropdowns", {}).get(recording, {}).get("active", "True")})
-
-
 def add_new_recording_onclick():
     new_recording_name = new_recording_name_var.get()
-    print("The name is : " + new_recording_name)
+    add_new_recording.collect_data(new_recording_name, 3)
     new_recording_name_var.set("")
 
-def on_close():
+
+def on_close(root):
     save_status()
     root.destroy()
 
@@ -51,7 +46,7 @@ def save_status():
     dropdowns_status = {}
     recorded_actions_availability_status = {}
 
-    for var, dropdown, element in dropdowns:
+    for var, dropdown, element in dropdowns_arr:
         dropdown_details = {}
         dropdown_details["value"] = var.get()
         dropdown_details["active"] = recordings_toggle.get(element)
@@ -67,13 +62,13 @@ def save_status():
 
 
 def on_button_click(i):
-    recordings_toggle[recordings[i]] = not recordings_toggle[recordings[i]]
-    next_color = "green" if recordings_toggle[recordings[i]] else "red"
-    buttons[i].config(background=next_color)
-    btn_text = "deactivate" if recordings_toggle[recordings[i]] else "activate"
+    recordings_toggle[listed_recordings[i]] = not recordings_toggle[listed_recordings[i]]
+    next_color = "green" if recordings_toggle[listed_recordings[i]] else "red"
+    buttons_arr[i].config(background=next_color)
+    btn_text = "deactivate" if recordings_toggle[listed_recordings[i]] else "activate"
     btn_text_var = tk.StringVar()
     btn_text_var.set(btn_text)
-    buttons[i].config(textvariable=btn_text_var)
+    buttons_arr[i].config(textvariable=btn_text_var)
 
 
 def on_select(event, action_var, last_action, element):
@@ -86,84 +81,34 @@ def on_select(event, action_var, last_action, element):
     if new_action != 'none':
         recorded_actions_availability[new_action] = False
     last_action[0] = new_action
-    for var, dropdown, _ in dropdowns:
+    for var, dropdown, _ in dropdowns_arr:
         dropdown['values'] = [action for action, available in recorded_actions_availability.items() if available]
 
 
-# Utwórz okno główne
-root = ThemedTk(theme="arc")  # Użyj motywu "arc"
-root.geometry('600x800')  # Ustaw rozmiar okna
-root.resizable(False, False)  # Uniemożliw zmianę rozmiaru okna
-root.configure(bg='gray')  # Ustaw tło aplikacji na szare
+if __name__ == '__main__':
+    status = read_status_from_json()
+    app_status_toggle = status.get("app_status", constans.app_status_toggle)
+    listed_recordings = constans.listed_recordings
+    recorded_actions_availability = constans.recorded_actions_availability
+    recorded_actions_availability.update(status.get("action_availability", {}))
 
-# Utwórz ramkę do przechowywania widgetów
-frame = ttk.Label(root, background='white')
-frame.pack(fill='both', side='left')  # Przesuń ramkę na lewą stronę okna
-frame.configure(relief='groove', borderwidth=6)  # Dodaj zaokrąglone rogi do ramki
+    for recording in listed_recordings:
+        recordings_toggle.update({recording: status.get("dropdowns", {}).get(recording, {}).get("active", "True")})
 
-for i, element in enumerate(recordings):
-    label = ttk.Label(frame, text=element)
-    label.grid(row=i, column=0, padx=5, pady=5)
-    label.config(font=("Helvetica", 14))
+    main_window_root = structures.create_main_window()
 
-    actions = [action for action, available in recorded_actions_availability.items() if available]
-    action_var = tk.StringVar()
-    action_dropdown = ttk.Combobox(frame, textvariable=action_var)
-    action_dropdown['values'] = actions
-    action_dropdown.grid(row=i, column=1, padx=5, pady=5)
-    action_dropdown.config(font=("Helvetica", 14))
-    action_dropdown.set(status.get("dropdowns", {}).get(element, {}).get("value", "none"))
-    dropdowns.append((action_var, action_dropdown, element))
+    dropdowns_frame = structures.create_dropdowns_frame(main_window_root)
+    for i, recording_name in enumerate(listed_recordings):
+        structures.create_recording_label(dropdowns_frame, recording_name, i)
+        structures.create_dropdowns(dropdowns_frame, recorded_actions_availability, i, status, recording_name,
+                                    dropdowns_arr, on_select)
+        structures.create_buttons(dropdowns_frame, i, status, recording_name, on_button_click, buttons_arr)
 
-    button_frame = ttk.Frame(frame)  # Place button frame inside 'frame' instead of 'root'
-    button_frame.grid(row=i, column=2, padx=5, pady=5, sticky='w')  # Adjust row and column, add padding
+    structures.create_on_button_panel(main_window_root, app_status_toggle, app_status_onclick)
+    new_recording_name_var = tk.StringVar()
 
-    start_text = "deactivate" if status.get("dropdowns", {}).get(element, {}).get("active", True) else "activate"
-    button_var = tk.StringVar()
-    button_var.set(start_text)
-    start_color = "green" if status.get("dropdowns", {}).get(element, {}).get("active", True) else "red"
+    structures.create_add_recording_panel(main_window_root, add_new_recording_onclick, new_recording_name_var)
+    structures.create_save_button_panel(main_window_root, save_status)
 
-    button = tk.Button(button_frame, textvariable=button_var, command=lambda i=i: on_button_click(i),
-                       background=start_color)
-    button.pack(side='left')
-
-    buttons.append(button)
-
-    action_dropdown.bind('<<ComboboxSelected>>',
-                         lambda event, action_var=action_var, last_action=[None], element=element: on_select(event,
-                                                                                                             action_var,
-                                                                                                             last_action,
-                                                                                                             element))
-
-# Add on/off button
-on_button_frame = ttk.Frame(root)
-app_status = "On" if app_status_toggle else "Off"
-on_button_frame.pack(side='top', fill='x', pady=(20, 0))
-on_button = tk.Button(on_button_frame, text=app_status)
-on_button.config(command=lambda on_button=on_button: app_status_onclick(on_button))
-on_button.pack(side='bottom', fill='both', padx=(30, 30), pady=(20, 20))
-
-# Add new recording button
-add_button_frame = ttk.Frame(root)
-add_button_frame.pack(side='top', fill='x', pady=(20, 20))
-add_button = tk.Button(add_button_frame, text="Add new recorded action", command=add_new_recording_onclick)
-add_button.pack(side='bottom', fill='both', padx=(30, 30), pady=(5, 20))
-new_recording_name_var = tk.StringVar()
-name_entry = tk.Entry(add_button_frame, textvariable=new_recording_name_var, font=('calibre', 10, 'normal'))
-name_entry.pack(side='bottom', fill='both', padx=(30, 30), pady=(5, 5))
-
-text_var = tk.StringVar()
-text_var.set("Fill name of new recording\nthen add new recording")
-label = tk.Label(add_button_frame, textvariable=text_var)
-label.pack(side='top', fill='both', padx=(30, 30), pady=(20, 5))
-
-# Create a frame for the save button
-save_button_frame = ttk.Frame(root)
-save_button_frame.pack(side='bottom', fill='x', pady=(20, 40))
-
-# Create the save button
-save_button = tk.Button(save_button_frame, text="Save settings", command=save_status)
-save_button.pack(side='bottom', fill='both', padx=(30, 30), pady=(20, 20))
-
-root.protocol("WM_DELETE_WINDOW", on_close)
-root.mainloop()
+    main_window_root.protocol("WM_DELETE_WINDOW", lambda root=main_window_root: on_close(root))
+    main_window_root.mainloop()
