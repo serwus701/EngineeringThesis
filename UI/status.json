@@ -1,1 +1,0 @@
-{"dropdowns": {"rec1": {"value": "none", "active": true}, "rec2": {"value": "act4", "active": false}, "rec3": {"value": "act1", "active": false}, "rec4": {"value": "none", "active": true}}, "action_availability": {"act1": false, "act2": true, "act3": true, "act4": false, "none": true}, "app_status": false}
