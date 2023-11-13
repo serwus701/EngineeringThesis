@@ -10,16 +10,7 @@ def send_data(server_address, server_port):
     # Connect to the server
     client.connect((server_address, server_port))
 
-    # Mocked condition to determine the message to send
-    condition = random.choice([1, 2, 3])
-
-    # Send different messages based on the mocked condition
-    if condition == 1:
-        message = "1"
-    elif condition == 2:
-        message = "2"
-    else:
-        message = "3"
+    message = "1"
 
     print(f"Sending message: {message}")
     client.send(message.encode('utf-8'))
@@ -33,9 +24,7 @@ def send_data(server_address, server_port):
 
 
 if __name__ == "__main__":
-    server_address = '127.0.0.1'  # Replace with the actual server address
+    server_address = '192.168.2.239'  # Replace with the actual server address
     server_port = 8080  # Replace with the actual server port
 
-    while True:
-        send_data(server_address, server_port)
-        time.sleep(1)  # Sleep for 1 second before sending the next message
+    send_data(server_address, server_port)
