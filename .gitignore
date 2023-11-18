@@ -2,6 +2,7 @@ venv/
 Storage/
 WORKS_DO_NOT_TOUCH/
 MP_Data/
+S_MP_Data/
 Logs/
 .idea/
 .ipynb_checkpoints

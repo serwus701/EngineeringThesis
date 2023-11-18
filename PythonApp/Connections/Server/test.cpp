@@ -1,24 +1,22 @@
 #include <windows.h>
-#include <mmdeviceapi.h>
-#include <endpointvolume.h>
 #include <iostream>
 
-BOOL CALLBACK MonitorEnumProc(HMONITOR hMonitor, HDC hdcMonitor, LPRECT lprcMonitor, LPARAM dwData) {
-    MONITORINFOEX mi;
-    mi.cbSize = sizeof(mi);
-    GetMonitorInfo(hMonitor, &mi);
-
-    // Assuming you want to move it to the right monitor, you can identify it based on the monitor position.
-    if (mi.dwFlags & MONITORINFOF_PRIMARY) {
-        // This is the primary monitor, do nothing or handle as needed.
-    } else {
-        // This is a secondary monitor, move window here.
-        HWND hWnd = (HWND)dwData;
-        SetWindowPos(hWnd, NULL, mi.rcMonitor.left, mi.rcMonitor.top, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
-    }
-
-    return TRUE;
-}
+//BOOL CALLBACK MonitorEnumProc(HMONITOR hMonitor, HDC hdcMonitor, LPRECT lprcMonitor, LPARAM dwData) {
+//    MONITORINFOEX mi;
+//    mi.cbSize = sizeof(mi);
+//    GetMonitorInfo(hMonitor, &mi);
+//
+//    // Assuming you want to move it to the right monitor, you can identify it based on the monitor position.
+//    if (mi.dwFlags & MONITORINFOF_PRIMARY) {
+//        // This is the primary monitor, do nothing or handle as needed.
+//    } else {
+//        // This is a secondary monitor, move window here.
+//        HWND hWnd = (HWND)dwData;
+//        SetWindowPos(hWnd, NULL, mi.rcMonitor.left, mi.rcMonitor.top, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+//    }
+//
+//    return TRUE;
+//}
 
 void MoveWindow(bool isLeft) {
     HWND foregroundWindow = GetForegroundWindow();
@@ -56,27 +54,30 @@ void MoveWindow(bool isLeft) {
         SetWindowPos(foregroundWindow, NULL, 1920, 0, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
     }
 }
+//
+//void LockMyPC() {
+//    LockWorkStation();
+//}
+//
+//void ShowDesktop(){
+//    keybd_event(VK_LWIN, 0, 0, 0);  // Press the left Windows key
+//    keybd_event('D', 0, 0, 0);      // Press the 'D' key
+//    keybd_event('D', 0, KEYEVENTF_KEYUP, 0);  // Release the 'D' key
+//    keybd_event(VK_LWIN, 0, KEYEVENTF_KEYUP, 0);  // Release the left Windows key
+//
+//}
+//
+//void ToggleMutePC() {
+//    HWND hwndVolume = FindWindow("DV2ControlHost", nullptr);
+//    SendMessage(hwndVolume, WM_APPCOMMAND, 0, MAKELPARAM(0, APPCOMMAND_VOLUME_MUTE));
+//}
 
-void LockMyPC() {
-    LockWorkStation();
-}
+int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
 
-void ShowDesktop(){
-    keybd_event(VK_LWIN, 0, 0, 0);  // Press the left Windows key
-    keybd_event('D', 0, 0, 0);      // Press the 'D' key
-    keybd_event('D', 0, KEYEVENTF_KEYUP, 0);  // Release the 'D' key
-    keybd_event(VK_LWIN, 0, KEYEVENTF_KEYUP, 0);  // Release the left Windows key
-
-}
-
-void ToggleMutePC() {
-    SendMessage(HWND_BROADCAST, WM_APPCOMMAND, 0, APPCOMMAND_VOLUME_MUTE * 0x10000);
-}
-
-int main() {
-//    MoveWindow(true);
+    Sleep(1);
+    MoveWindow(true);
 //    LockMyPC();
 //    ToggleMutePC();
-    ShowDesktop();
+//    ShowDesktop();
     return 0;
 }
