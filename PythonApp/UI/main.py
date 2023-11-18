@@ -22,6 +22,9 @@ def read_status_from_json():
         status_json = {}
     return status_json
 
+def train_and_send_new_model():
+    pass
+
 
 def add_new_recording_onclick():
     new_recording_name = new_recording_name_var.get()

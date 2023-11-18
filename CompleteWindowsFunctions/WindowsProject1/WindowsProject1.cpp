@@ -1,5 +1,7 @@
 ﻿#include <windows.h>
 #include <iostream>
+#include <Mmdeviceapi.h>
+#include <Endpointvolume.h>
 
 BOOL CALLBACK MonitorEnumProc(HMONITOR hMonitor, HDC hdcMonitor, LPRECT lprcMonitor, LPARAM dwData) {
     MONITORINFOEX mi;
@@ -61,10 +63,57 @@ void MoveWindow(bool isLeft) {
 }
 
 void MutePC() {
-    HWND hwndVolume = FindWindow(L"WMPlayerApp", NULL);
+    CoInitialize(NULL);
 
-    // Send the mute command to the system volume control
-    SendMessage(hwndVolume, WM_APPCOMMAND, 0, APPCOMMAND_VOLUME_MUTE);
+    // Get the default audio endpoint
+    IMMDeviceEnumerator* deviceEnumerator = NULL;
+    CoCreateInstance(__uuidof(MMDeviceEnumerator), NULL, CLSCTX_INPROC_SERVER,
+        __uuidof(IMMDeviceEnumerator), (LPVOID*)&deviceEnumerator);
+
+    IMMDevice* defaultDevice = NULL;
+    deviceEnumerator->GetDefaultAudioEndpoint(eRender, eConsole, &defaultDevice);
+
+    // Get the volume interface
+    IAudioEndpointVolume* endpointVolume = NULL;
+    defaultDevice->Activate(__uuidof(IAudioEndpointVolume), CLSCTX_INPROC_SERVER,
+        NULL, (LPVOID*)&endpointVolume);
+
+    // Mute the volume
+    endpointVolume->SetMute(TRUE, NULL);
+
+    // Release COM objects
+    deviceEnumerator->Release();
+    defaultDevice->Release();
+    endpointVolume->Release();
+    CoUninitialize();
+
+}
+
+void UnmutePC() {
+    // Initialize COM
+    CoInitialize(NULL);
+
+    // Get the default audio endpoint
+    IMMDeviceEnumerator* deviceEnumerator = NULL;
+    CoCreateInstance(__uuidof(MMDeviceEnumerator), NULL, CLSCTX_INPROC_SERVER,
+        __uuidof(IMMDeviceEnumerator), (LPVOID*)&deviceEnumerator);
+
+    IMMDevice* defaultDevice = NULL;
+    deviceEnumerator->GetDefaultAudioEndpoint(eRender, eConsole, &defaultDevice);
+
+    // Get the volume interface
+    IAudioEndpointVolume* endpointVolume = NULL;
+    defaultDevice->Activate(__uuidof(IAudioEndpointVolume), CLSCTX_INPROC_SERVER,
+        NULL, (LPVOID*)&endpointVolume);
+
+    // Unmute the volume
+    endpointVolume->SetMute(FALSE, NULL);
+
+    // Release COM objects
+    deviceEnumerator->Release();
+    defaultDevice->Release();
+    endpointVolume->Release();
+    CoUninitialize();
 }
 
 void LockMyPC() {
@@ -107,7 +156,7 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         //ToggleMutePC();
         //ShowDesktop();
         //switchVirtualDesktopL();
-    MutePC();
+    UnmutePC();
 
 
 
