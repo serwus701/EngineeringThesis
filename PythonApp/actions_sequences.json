@@ -1,0 +1,11 @@
+{
+  "pc_on": 30,
+  "pc_lock": 30,
+  "move_left": 30,
+  "move_right": 30,
+  "show_desktop": 30,
+  "mute": 30,
+  "3": "12345",
+  "12345": 3,
+  "1": 3
+}

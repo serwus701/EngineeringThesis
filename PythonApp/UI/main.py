@@ -12,11 +12,12 @@ global listed_recordings
 buttons_arr = []
 dropdowns_arr = []
 recordings_toggle = {}
+status_file_path = './status.json'
 
 
 def read_status_from_json():
     try:
-        with open('status.json', 'r') as f:
+        with open(status_file_path, 'r') as f:
             status_json = json.load(f)
     except FileNotFoundError:
         status_json = {}
@@ -29,6 +30,7 @@ def train_and_send_new_model():
 def add_new_recording_onclick():
     new_recording_name = new_recording_name_var.get()
     add_new_recording.collect_data(new_recording_name, 3)
+    add_new_recording.build_and_train_NN(new_recording_name, 3)
     new_recording_name_var.set("")
 
 
@@ -60,7 +62,7 @@ def save_status():
     status["dropdowns"] = dropdowns_status
     status["action_availability"] = recorded_actions_availability_status
     status["app_status"] = app_status_toggle
-    with open('status.json', 'w') as f:
+    with open(status_file_path, 'w') as f:
         json.dump(status, f)
 
 
