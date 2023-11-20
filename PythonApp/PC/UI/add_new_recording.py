@@ -1,3 +1,5 @@
+import pickle
+import socket
 import cv2
 import numpy as np
 import os
@@ -155,7 +157,11 @@ def build_and_train_NN(action, no_sequences):
     update_json(action, no_sequences)
     actions = get_actions()
     label_map = {label: num for num, label in enumerate(actions)}
-    sequences, labels = np.load('./sequences.npy').tolist(), np.load('./labels.npy').tolist()
+    sequences = np.load('./Model/sequences.npy', allow_pickle=True).tolist()
+    labels = np.load('./Model/labels.npy', allow_pickle=True).tolist()
+
+    # print(labels)
+    # print(sequences)
 
     for sequence in range(no_sequences):
         window = []
@@ -165,8 +171,8 @@ def build_and_train_NN(action, no_sequences):
         sequences.append(window)
         labels.append(label_map[action])
 
-    np.save('sequences.npy', np.array(sequences))
-    np.save('labels.npy', np.array(labels))
+    np.save('./Model/sequences.npy', np.array(sequences))
+    np.save('./Model/labels.npy', np.array(labels))
 
     y = to_categorical(labels).astype(int)
     X = np.array(sequences)
@@ -184,23 +190,28 @@ def build_and_train_NN(action, no_sequences):
     model.add(Dense(actions.shape[0], activation='softmax', name='output_layer'))
 
     model.compile(optimizer='Adam', loss='categorical_crossentropy', metrics=['categorical_accuracy'])
-    model.fit(X_train, y_train, epochs=100, callbacks=[tb_callback])
-    model.save('my_model.keras')
-    send_model_via_api(model, api_url)
+    model.fit(X_train, y_train, epochs=10, callbacks=[tb_callback])
+    model.save('Model/my_model.keras')
+    send_model_via_api(model)
 
 
-def send_model_via_api(model, api_url):
-    # Save the model architecture to JSON
-    model_json = model.to_json()
+def send_model_via_api(model):
 
-    # Save the model weights to HDF5
-    model.save_weights('model_weights.h5')
+    # Create a socket object
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-    # Send the model JSON and weights to the receiver
-    files = {'model_json': ('model.json', model_json, 'application/json'),
-             'model_weights': ('model_weights.h5', open('model_weights.h5', 'rb'), 'application/octet-stream')}
-    
-    response = requests.post(api_url, files=files)
+    # Define the address and port to connect
+    host = 'localhost'
+    port = 12345
 
-    # Print the response from the receiver
-    print(response.text)
+    try:
+        # Connect to the server
+        s.connect((host, port))
+
+        # Serialize and send the trained model
+        model_bytes = pickle.dumps(model)
+        s.sendall(model_bytes)
+
+    finally:
+        # Close the socket
+        s.close()

@@ -29,8 +29,8 @@ def train_and_send_new_model():
 
 def add_new_recording_onclick():
     new_recording_name = new_recording_name_var.get()
-    add_new_recording.collect_data(new_recording_name, 10)
-    add_new_recording.build_and_train_NN(new_recording_name, 10)
+    add_new_recording.collect_data(new_recording_name, 3)
+    add_new_recording.build_and_train_NN(new_recording_name, 3)
     new_recording_name_var.set("")
 
 

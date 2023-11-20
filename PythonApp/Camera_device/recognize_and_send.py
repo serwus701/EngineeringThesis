@@ -3,6 +3,7 @@ import requests
 import numpy as np
 import mediapipe as mp
 from tensorflow import keras
+import os
 
 
 def extract_keypoints(results):
@@ -67,7 +68,17 @@ def recognize():
     mp_holistic = mp.solutions.holistic  # Holistic model
     mp_drawing = mp.solutions.drawing_utils  # Drawing utilities
 
-    model = keras.models.load_model('my_model.keras')
+
+    # Get the current directory
+    current_dir = os.getcwd()
+
+    # Get the list of files in the current directory
+    files = os.listdir(current_dir)
+
+    # Print the files
+    for file in files:
+        print(file)
+    model = keras.models.load_model('./dupa.keras')
 
     sequence = []
     threshold = 0.95

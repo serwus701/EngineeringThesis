@@ -1,9 +1,0 @@
-Akcje:
-włącz komputer (uśpij?)
-Wyłącz komputer (uśpij?)
-zablokuj kompa
-zmień okno w lewo
-zmień okno w prawo
-pokaż pulpit
-mute
-unmute
