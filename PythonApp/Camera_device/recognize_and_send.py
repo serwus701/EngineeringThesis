@@ -5,6 +5,7 @@ import mediapipe as mp
 from tensorflow import keras
 import os
 
+api_url = 'http://localhost:8080/execute'
 
 def extract_keypoints(results):
     pose = np.array([[res.x, res.y, res.z, res.visibility] for res in
@@ -52,7 +53,7 @@ def draw_styled_landmarks(image, results, mp_holistic, mp_drawing):
                               )
 
 
-def send_data_to_api(command_to_send, api_url):
+def send_data_to_api(command_to_send):
     try:
         # Send the command to the server API
         response = requests.post(api_url, json={'command': command_to_send})
@@ -78,7 +79,7 @@ def recognize():
     # Print the files
     for file in files:
         print(file)
-    model = keras.models.load_model('./dupa.keras')
+    model = keras.models.load_model('./150rc4fun.keras')
 
     sequence = []
     threshold = 0.95
@@ -108,6 +109,7 @@ def recognize():
                 # 3. Viz logic
                 if res[np.argmax(res)] > threshold:
                     command = actions[np.argmax(res)]
+                    print(command)
                     send_data_to_api(command)
 
         cap.release()

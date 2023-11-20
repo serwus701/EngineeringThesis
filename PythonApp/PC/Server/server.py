@@ -8,7 +8,8 @@ app = Flask(__name__)
 def execute_action():
     try:
         # Receive the action name from the client
-        action_name = request.json.get('action_name')
+        action_name = request.json.get('command')
+        print(action_name)
 
         # Perform the desired action (for example, executing an executable file)
         os.startfile(os.getcwd() + "/actions_exe/" + action_name + ".exe")
