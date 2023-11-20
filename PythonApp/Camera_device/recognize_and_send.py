@@ -1,5 +1,5 @@
-import socket
 import cv2
+import requests
 import numpy as np
 import mediapipe as mp
 from tensorflow import keras
@@ -51,17 +51,16 @@ def draw_styled_landmarks(image, results, mp_holistic, mp_drawing):
                               )
 
 
-def send_data(command_to_send):
+def send_data_to_api(command_to_send, api_url):
     try:
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client:
-            client.connect((server_address, server_port))
-            client.send(command_to_send.encode('utf-8'))
+        # Send the command to the server API
+        response = requests.post(api_url, json={'command': command_to_send})
 
-            # Receive the response from the server
-            response = client.recv(1024)
-            print(f"Received from server: {response.decode('utf-8')}")
+        # Print the response from the server
+        print(response.json())
+
     except Exception as e:
-        print(e)
+        print(f"Error: {e}")
 
 
 def recognize():
@@ -73,7 +72,7 @@ def recognize():
     sequence = []
     threshold = 0.95
 
-    actions = np.array(['pc_on', 'pc_lock', 'move_left', 'move_right', 'show_destkop', 'mute'])
+    actions = np.array(['pc_on', 'pc_lock', 'move_left', 'move_right', 'show_desktop', 'mute'])
 
     cap = cv2.VideoCapture(0)
     # Set mediapipe model
@@ -98,12 +97,10 @@ def recognize():
                 # 3. Viz logic
                 if res[np.argmax(res)] > threshold:
                     command = actions[np.argmax(res)]
-                    send_data(server_address)
+                    send_data_to_api(command)
 
         cap.release()
 
 
 if __name__ == "__main__":
-    server_address = '192.168.2.239'  # Replace with the actual server address
-    server_port = 8080  # Replace with the actual server port
     recognize()

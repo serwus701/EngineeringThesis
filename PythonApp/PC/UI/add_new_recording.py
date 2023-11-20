@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import os
 import json
+import requests
 import mediapipe as mp
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense
@@ -13,6 +14,9 @@ mp_holistic = mp.solutions.holistic  # Holistic model
 mp_drawing = mp.solutions.drawing_utils  # Drawing utilities
 DATA_PATH = os.path.join('MP_Data')
 json_file_path = './actions_sequences.json'
+server_address = '192.168.2.239'  # Replace with the actual server address
+server_port = 8080
+api_url = 'http://localhost:5000/receive_model'
 
 
 def update_json(action_name, num_sequences):
@@ -151,9 +155,7 @@ def build_and_train_NN(action, no_sequences):
     update_json(action, no_sequences)
     actions = get_actions()
     label_map = {label: num for num, label in enumerate(actions)}
-    sequences, labels = [], []
-
-    print(type(np.load('sequences.npy', allow_pickle=True).tolist()))
+    sequences, labels = np.load('./sequences.npy').tolist(), np.load('./labels.npy').tolist()
 
     for sequence in range(no_sequences):
         window = []
@@ -172,13 +174,33 @@ def build_and_train_NN(action, no_sequences):
 
     log_dir = os.path.join('Logs')
     tb_callback = TensorBoard(log_dir=log_dir)
+
     model = Sequential()
-    model.add(LSTM(64, return_sequences=True, activation='relu', input_shape=(30, 258)))
-    model.add(LSTM(128, return_sequences=True, activation='relu'))
-    model.add(LSTM(64, return_sequences=False, activation='relu'))
-    model.add(Dense(64, activation='relu'))
-    model.add(Dense(32, activation='relu'))
-    model.add(Dense(actions.shape[0], activation='softmax'))
+    model.add(LSTM(64, return_sequences=True, activation='relu', input_shape=(30, 258), name='lstm_1'))
+    model.add(LSTM(128, return_sequences=True, activation='relu', name='lstm_2'))
+    model.add(LSTM(64, return_sequences=False, activation='relu', name='lstm_3'))
+    model.add(Dense(64, activation='relu', name='dense_1'))
+    model.add(Dense(32, activation='relu', name='dense_2'))
+    model.add(Dense(actions.shape[0], activation='softmax', name='output_layer'))
+
     model.compile(optimizer='Adam', loss='categorical_crossentropy', metrics=['categorical_accuracy'])
     model.fit(X_train, y_train, epochs=100, callbacks=[tb_callback])
     model.save('my_model.keras')
+    send_model_via_api(model, api_url)
+
+
+def send_model_via_api(model, api_url):
+    # Save the model architecture to JSON
+    model_json = model.to_json()
+
+    # Save the model weights to HDF5
+    model.save_weights('model_weights.h5')
+
+    # Send the model JSON and weights to the receiver
+    files = {'model_json': ('model.json', model_json, 'application/json'),
+             'model_weights': ('model_weights.h5', open('model_weights.h5', 'rb'), 'application/octet-stream')}
+    
+    response = requests.post(api_url, files=files)
+
+    # Print the response from the receiver
+    print(response.text)
