@@ -65,7 +65,7 @@ def create_dropdowns(dropdowns_frame, recorded_actions_availability, i, status, 
     action_dropdown.grid(row=i, column=1, padx=5, pady=5)
     action_dropdown.config(font=("Helvetica", 14))
     action_dropdown.set(status.get("dropdowns", {}).get(recording_name, {}).get("value", "none"))
-    dropdowns_arr.append((action_var, action_dropdown, recording_name))
+    dropdowns_arr[recording_name] = (action_var, action_dropdown, recording_name)
 
     action_dropdown.bind('<<ComboboxSelected>>',
                          lambda event, action_var=action_var, last_action=[None], element=recording_name: on_select(

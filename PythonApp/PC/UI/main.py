@@ -10,7 +10,7 @@ global app_status_toggle
 global status
 global listed_recordings
 buttons_arr = {}
-dropdowns_arr = []
+dropdowns_arr = {}
 recordings_toggle = {}
 recorded_actions_availability = {}
 
@@ -55,11 +55,14 @@ def save_status():
     dropdowns_status = {}
     recorded_actions_availability_status = {}
 
-    for var, dropdown, element in dropdowns_arr:
+    for recording_name in recordings_toggle:
         dropdown_details = {}
-        dropdown_details["value"] = var.get()
-        dropdown_details["active"] = recordings_toggle.get(element)
-        dropdowns_status[element] = dropdown_details
+        try:
+            dropdown_details["value"] = dropdowns_arr[recording_name][0].get()
+        except KeyError:
+            dropdown_details["value"] = 'none'
+        dropdown_details["active"] = recordings_toggle[recording_name]
+        dropdowns_status[recording_name] = dropdown_details
     for action, action_availability in recorded_actions_availability.items():
         recorded_actions_availability_status[action] = action_availability
 
@@ -96,7 +99,8 @@ def on_select(event, action_var, last_action, element):
     if new_action != 'none':
         recorded_actions_availability[new_action] = False
     last_action[0] = new_action
-    for var, dropdown, _ in dropdowns_arr:
+    for var, dropdown, _ in dropdowns_arr.values():
+        dupa = dropdown['values']
         dropdown['values'] = [action for action, available in recorded_actions_availability.items() if available]
 
 
