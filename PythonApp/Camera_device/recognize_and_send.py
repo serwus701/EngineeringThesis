@@ -84,7 +84,7 @@ def recognize():
     sequence = []
     threshold = 0.95
 
-    actions = np.array(['pc_on', 'pc_lock', 'move_left', 'move_right', 'show_desktop', 'mute'])
+    actions = np.array(['pc_on', 'lock', 'move_left', 'move_right', 'show_desktop', 'mute'])
 
     cap = cv2.VideoCapture(0)
     # Set mediapipe model

@@ -15,30 +15,32 @@ from tensorflow.keras.utils import to_categorical
 mp_holistic = mp.solutions.holistic  # Holistic model
 mp_drawing = mp.solutions.drawing_utils  # Drawing utilities
 DATA_PATH = os.path.join('MP_Data')
-json_file_path = './actions_sequences.json'
+json_file_path = './status.json'
+curr_path = os.path.dirname(os.path.abspath(__file__))
 server_address = '192.168.2.239'  # Replace with the actual server address
 server_port = 8080
 api_url = 'http://localhost:5000/receive_model'
 
 
-def update_json(action_name, num_sequences):
-    try:
-        with open(json_file_path, 'r') as json_file:
-            data = json.load(json_file)
-    except FileNotFoundError:
-        data = {}
+def update_json(action_name):
+    # try:
+    #     with open(json_file_path, 'r') as json_file:
+    #         data = json.load(json_file)
+    # except FileNotFoundError:
+    #     data = {}
 
-    data[action_name] = num_sequences
+    # data['dropdowns'][action_name] = { "value": "none", "active": False }
 
-    with open(json_file_path, 'w') as json_file:
-        json.dump(data, json_file, indent=2)
+    # with open(json_file_path, 'w') as json_file:
+    #     json.dump(data, json_file, indent=2)
+    pass
 
 
 def get_actions():
     with open(json_file_path, 'r') as json_file:
         data = json.load(json_file)
 
-    return np.array(list(data.keys()))
+    return np.array(list(data["dropdowns"].keys()))
 
 
 def mediapipe_detection(image, model):
@@ -154,11 +156,11 @@ def collect_data(action_name, no_sequences):
 
 
 def build_and_train_NN(action, no_sequences):
-    update_json(action, no_sequences)
+    update_json(action)
     actions = get_actions()
     label_map = {label: num for num, label in enumerate(actions)}
-    sequences = np.load('./Model/sequences.npy', allow_pickle=True).tolist()
-    labels = np.load('./Model/labels.npy', allow_pickle=True).tolist()
+    sequences = np.load(os.path.join(curr_path, 'Model/sequences.npy'), allow_pickle=True).tolist()
+    labels = np.load(os.path.join(curr_path, 'Model/labels.npy'), allow_pickle=True).tolist()
 
     # print(labels)
     # print(sequences)
@@ -171,8 +173,8 @@ def build_and_train_NN(action, no_sequences):
         sequences.append(window)
         labels.append(label_map[action])
 
-    np.save('./Model/sequences.npy', np.array(sequences))
-    np.save('./Model/labels.npy', np.array(labels))
+    np.save(os.path.join(curr_path, 'Model/sequences.npy'), np.array(sequences))
+    np.save(os.path.join(curr_path, 'Model/labels.npy'), np.array(labels))
 
     y = to_categorical(labels).astype(int)
     X = np.array(sequences)
@@ -189,10 +191,13 @@ def build_and_train_NN(action, no_sequences):
     model.add(Dense(32, activation='relu', name='dense_2'))
     model.add(Dense(actions.shape[0], activation='softmax', name='output_layer'))
 
+    print(actions.shape[0])
+    print(y_train.shape)
+
     model.compile(optimizer='Adam', loss='categorical_crossentropy', metrics=['categorical_accuracy'])
     model.fit(X_train, y_train, epochs=10, callbacks=[tb_callback])
     model.save('Model/my_model.keras')
-    send_model_via_api(model)
+    return model
 
 
 def send_model_via_api(model):

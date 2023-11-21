@@ -3,16 +3,19 @@ import json
 import constans
 import add_new_recording
 import structures
+import os
 
 global new_recording_name_var
 global app_status_toggle
 global status
-global recorded_actions_availability
 global listed_recordings
-buttons_arr = []
+buttons_arr = {}
 dropdowns_arr = []
 recordings_toggle = {}
-status_file_path = './status.json'
+recorded_actions_availability = {}
+
+curr_path = os.path.dirname(os.path.abspath(__file__))
+status_file_path = os.path.join(curr_path, 'status.json')
 
 
 def read_status_from_json():
@@ -23,15 +26,16 @@ def read_status_from_json():
         status_json = {}
     return status_json
 
-def train_and_send_new_model():
-    pass
-
 
 def add_new_recording_onclick():
     new_recording_name = new_recording_name_var.get()
+    recordings_toggle.update({new_recording_name:  False })
+    save_status()
     add_new_recording.collect_data(new_recording_name, 3)
-    add_new_recording.build_and_train_NN(new_recording_name, 3)
+    model = add_new_recording.build_and_train_NN(new_recording_name, 3)
+    add_new_recording.send_model_via_api(model)
     new_recording_name_var.set("")
+    
 
 
 def on_close(root):
@@ -62,18 +66,24 @@ def save_status():
     status["dropdowns"] = dropdowns_status
     status["action_availability"] = recorded_actions_availability_status
     status["app_status"] = app_status_toggle
-    with open(status_file_path, 'w') as f:
-        json.dump(status, f)
+    while True:
+        try:
+            with open(status_file_path, 'w') as f:
+                json.dump(status, f)
+            break
+        except:
+            pass
 
 
-def on_button_click(i):
-    recordings_toggle[listed_recordings[i]] = not recordings_toggle[listed_recordings[i]]
-    next_color = "green" if recordings_toggle[listed_recordings[i]] else "red"
-    buttons_arr[i].config(background=next_color)
-    btn_text = "deactivate" if recordings_toggle[listed_recordings[i]] else "activate"
+def on_button_click(recording_name):
+    value = not recordings_toggle[recording_name]
+    recordings_toggle[recording_name] = value
+    next_color = "green" if recordings_toggle[recording_name] else "red"
+    buttons_arr[recording_name].config(background=next_color)
+    btn_text = "deactivate" if recordings_toggle[recording_name] else "activate"
     btn_text_var = tk.StringVar()
     btn_text_var.set(btn_text)
-    buttons_arr[i].config(textvariable=btn_text_var)
+    buttons_arr[recording_name].config(textvariable=btn_text_var)
 
 
 def on_select(event, action_var, last_action, element):
@@ -93,17 +103,14 @@ def on_select(event, action_var, last_action, element):
 if __name__ == '__main__':
     status = read_status_from_json()
     app_status_toggle = status.get("app_status", constans.app_status_toggle)
-    listed_recordings = constans.listed_recordings
-    recorded_actions_availability = constans.recorded_actions_availability
     recorded_actions_availability.update(status.get("action_availability", {}))
-
-    for recording in listed_recordings:
-        recordings_toggle.update({recording: status.get("dropdowns", {}).get(recording, {}).get("active", "True")})
+    for recording in status.get("dropdowns", {}):
+        recordings_toggle.update({recording: status.get("dropdowns", {}).get(recording, {}).get("active", True)})
 
     main_window_root = structures.create_main_window()
 
     dropdowns_frame = structures.create_dropdowns_frame(main_window_root)
-    for i, recording_name in enumerate(listed_recordings):
+    for i, recording_name in enumerate(recordings_toggle):
         structures.create_recording_label(dropdowns_frame, recording_name, i)
         structures.create_dropdowns(dropdowns_frame, recorded_actions_availability, i, status, recording_name,
                                     dropdowns_arr, on_select)

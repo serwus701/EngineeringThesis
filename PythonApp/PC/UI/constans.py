@@ -1,11 +1,15 @@
 
 
 recorded_actions_availability = {
-    'act1': True,
-    'act2': True,
-    'act3': True,
-    'act4': True,
-    'none': True,
+    'lock': True,
+    'move_left': True,
+    'move_right': True,
+    'mute': True,
+    'unmute': True,
+    'show_desktop': True,
+    'swich_desktop_l': True,
+    'swich_desktop_r': True,
+    
 }
 
 button_colors = ['red', 'green']

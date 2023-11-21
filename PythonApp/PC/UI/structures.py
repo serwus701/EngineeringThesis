@@ -84,8 +84,8 @@ def create_buttons(dropdowns_frame, i, status, recording_name, on_button_click, 
     button_var.set(start_text)
     start_color = "green" if status.get("dropdowns", {}).get(recording_name, {}).get("active", True) else "red"
 
-    button = tk.Button(button_frame, textvariable=button_var, command=lambda i=i: on_button_click(i),
+    button = tk.Button(button_frame, textvariable=button_var, command=lambda recording_name=recording_name: on_button_click(recording_name),
                        background=start_color)
     button.pack(side='left')
 
-    buttons_arr.append(button)
+    buttons_arr[recording_name] = button
