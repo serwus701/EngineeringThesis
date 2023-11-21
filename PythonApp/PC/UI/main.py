@@ -4,6 +4,7 @@ import constans
 import add_new_recording
 import structures
 import os
+import sys
 
 global new_recording_name_var
 global app_status_toggle
@@ -33,8 +34,9 @@ def add_new_recording_onclick():
     save_status()
     add_new_recording.collect_data(new_recording_name, 3)
     model = add_new_recording.build_and_train_NN(new_recording_name, 3)
-    add_new_recording.send_model_via_api(model)
+    add_new_recording.send_model_via_api(new_recording_name, model)
     new_recording_name_var.set("")
+    restart_program()
     
 
 
@@ -103,6 +105,9 @@ def on_select(event, action_var, last_action, element):
         dupa = dropdown['values']
         dropdown['values'] = [action for action, available in recorded_actions_availability.items() if available]
 
+def restart_program():
+    python = sys.executable
+    os.execl(python, python, *sys.argv)
 
 if __name__ == '__main__':
     status = read_status_from_json()

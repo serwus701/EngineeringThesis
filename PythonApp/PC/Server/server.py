@@ -15,8 +15,7 @@ def execute_action():
         else:
             print("App is not active")
 
-        # Perform the desired action (for example, executing an executable file)
-        # os.startfile(os.getcwd() + "/actions_exe/" + action_name + ".exe")
+        # os.startfile(os.getcwd() + "/actions_exe/" + get_mapped_action_name(action_name) + ".exe")
 
         return jsonify({'message': 'Action executed successfully'})
     except Exception as e:
@@ -37,7 +36,20 @@ def check_if_app_is_active():
     except:
         print("no file")
         return False
-
+    
+def get_mapped_action_name(recieved_action_name):
+    try:
+        with open('../UI/status.json') as f:
+            data = json.load(f)
+            if not data.get("dropdowns", {}).get(recieved_action_name, {}).get("active", False):
+                return "none"
+            mapped_name = data.get("dropdowns", {}).get(recieved_action_name, {}).get("value", "none")
+            return mapped_name
+    except Exception as e:
+        print(e)
+        return "none"
+    
+        
 if __name__ == "__main__":
     port = 8080
     start_server(port)

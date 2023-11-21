@@ -5,7 +5,7 @@ import tkinter as tk
 
 def create_main_window():
     root = ThemedTk(theme="arc")  # Użyj motywu "arc"
-    root.geometry('600x800')  # Ustaw rozmiar okna
+    root.geometry('800x800')  # Ustaw rozmiar okna
     root.resizable(False, False)  # Uniemożliw zmianę rozmiaru okna
     root.configure(bg='gray')  # Ustaw tło aplikacji na szare
 

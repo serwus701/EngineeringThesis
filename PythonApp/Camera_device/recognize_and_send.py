@@ -1,3 +1,4 @@
+import json
 import cv2
 import requests
 import numpy as np
@@ -64,32 +65,37 @@ def send_data_to_api(command_to_send):
     except Exception as e:
         print(f"Error: {e}")
 
+def load_model():
+    while True:
+                try:
+                    model = keras.models.load_model('./my_model.keras')
+                    break
+                except:
+                    pass
+    return model
+
+def read_action_labels():
+    while True:
+        try:
+            with open('./action_names.json', 'r') as file:
+                actions = json.load(file)
+                return actions
+        except:
+            pass
 
 def recognize():
     mp_holistic = mp.solutions.holistic  # Holistic model
     mp_drawing = mp.solutions.drawing_utils  # Drawing utilities
-
-
-    # Get the current directory
-    current_dir = os.getcwd()
-
-    # Get the list of files in the current directory
-    files = os.listdir(current_dir)
-
-    # Print the files
-    for file in files:
-        print(file)
-    model = keras.models.load_model('./150rc4fun.keras')
-
     sequence = []
     threshold = 0.95
 
-    actions = np.array(['pc_on', 'lock', 'move_left', 'move_right', 'show_desktop', 'mute'])
+    actions = np.array(read_action_labels())
 
     cap = cv2.VideoCapture(0)
     # Set mediapipe model
     with mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=0.5) as holistic:
         while cap.isOpened():
+            model = load_model()
 
             # Read feed
             ret, frame = cap.read()

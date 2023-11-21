@@ -4,7 +4,6 @@ import cv2
 import numpy as np
 import os
 import json
-import requests
 import mediapipe as mp
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense
@@ -20,20 +19,7 @@ curr_path = os.path.dirname(os.path.abspath(__file__))
 server_address = '192.168.2.239'  # Replace with the actual server address
 server_port = 8080
 api_url = 'http://localhost:5000/receive_model'
-
-
-def update_json(action_name):
-    # try:
-    #     with open(json_file_path, 'r') as json_file:
-    #         data = json.load(json_file)
-    # except FileNotFoundError:
-    #     data = {}
-
-    # data['dropdowns'][action_name] = { "value": "none", "active": False }
-
-    # with open(json_file_path, 'w') as json_file:
-    #     json.dump(data, json_file, indent=2)
-    pass
+server_address = 'localhost'
 
 
 def get_actions():
@@ -156,7 +142,6 @@ def collect_data(action_name, no_sequences):
 
 
 def build_and_train_NN(action, no_sequences):
-    update_json(action)
     actions = get_actions()
     label_map = {label: num for num, label in enumerate(actions)}
     sequences = np.load(os.path.join(curr_path, 'Model/sequences.npy'), allow_pickle=True).tolist()
@@ -191,27 +176,26 @@ def build_and_train_NN(action, no_sequences):
     model.add(Dense(32, activation='relu', name='dense_2'))
     model.add(Dense(actions.shape[0], activation='softmax', name='output_layer'))
 
-    print(actions.shape[0])
-    print(y_train.shape)
-
     model.compile(optimizer='Adam', loss='categorical_crossentropy', metrics=['categorical_accuracy'])
     model.fit(X_train, y_train, epochs=10, callbacks=[tb_callback])
     model.save('Model/my_model.keras')
     return model
 
 
-def send_model_via_api(model):
-
+def send_model_via_api(new_recording_name, model):
     # Create a socket object
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     # Define the address and port to connect
-    host = 'localhost'
+    host = server_address
     port = 12345
 
     try:
         # Connect to the server
         s.connect((host, port))
+
+        # Send the model name
+        s.sendall(new_recording_name.encode('utf-8'))
 
         # Serialize and send the trained model
         model_bytes = pickle.dumps(model)
