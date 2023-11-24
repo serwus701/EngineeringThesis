@@ -15,7 +15,7 @@ def execute_action():
         else:
             print("App is not active")
 
-        # os.startfile(os.getcwd() + "/actions_exe/" + get_mapped_action_name(action_name) + ".exe")
+        os.startfile(os.getcwd() + "/actions_exe/" + get_mapped_action_name(action_name) + ".exe")
 
         return jsonify({'message': 'Action executed successfully'})
     except Exception as e:
