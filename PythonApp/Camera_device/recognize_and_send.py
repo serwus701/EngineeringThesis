@@ -3,10 +3,10 @@ import cv2
 import requests
 import numpy as np
 import mediapipe as mp
-from tensorflow import keras
+import tensorflow as tf
 import os
 
-api_url = 'http://localhost:8080/execute'
+api_url = 'http://192.168.2.239:8080/execute'
 
 def extract_keypoints(results):
     pose = np.array([[res.x, res.y, res.z, res.visibility] for res in
@@ -56,10 +56,7 @@ def draw_styled_landmarks(image, results, mp_holistic, mp_drawing):
 
 def send_data_to_api(command_to_send):
     try:
-        # Send the command to the server API
         response = requests.post(api_url, json={'command': command_to_send})
-
-        # Print the response from the server
         print(response.json())
 
     except Exception as e:
@@ -68,11 +65,13 @@ def send_data_to_api(command_to_send):
 def load_model():
     while True:
                 try:
-                    model = keras.models.load_model('./my_model.keras')
+                    interpreter = tf.lite.Interpreter(model_path='my_model.tflite')
+                    interpreter.allocate_tensors()
                     break
-                except:
+                except Exception as e:
+                    print(e)
                     pass
-    return model
+    return interpreter
 
 def read_action_labels():
     while True:
@@ -83,7 +82,7 @@ def read_action_labels():
         except:
             pass
 
-def recognize():
+def recognize(): 
     mp_holistic = mp.solutions.holistic  # Holistic model
     mp_drawing = mp.solutions.drawing_utils  # Drawing utilities
     sequence = []
@@ -110,7 +109,14 @@ def recognize():
             sequence = sequence[-30:]
 
             if len(sequence) == 30:
-                res = model.predict(np.expand_dims(sequence, axis=0))[0]
+                input_tensor_index = model.get_input_details()[0]['index']
+                model.set_tensor(input_tensor_index, np.expand_dims(sequence, axis=0).astype(np.float32))
+
+                model.invoke()
+
+                # Assuming output_tensor_index is the index of the output tensor
+                output_tensor_index = model.get_output_details()[0]['index']
+                res = model.get_tensor(output_tensor_index)[0]
 
                 # 3. Viz logic
                 if res[np.argmax(res)] > threshold:
