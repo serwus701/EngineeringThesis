@@ -17,9 +17,7 @@ DATA_PATH = os.path.join('MP_Data')
 json_file_path = './status.json'
 curr_path = os.path.dirname(os.path.abspath(__file__))
 server_address = '192.168.2.239'  # Replace with the actual server address
-server_port = 8080
-api_url = 'http://localhost:5000/receive_model'
-server_address = 'localhost'
+server_port = 12345
 
 
 def get_actions():
@@ -92,7 +90,7 @@ def manage_folders(action_name, no_sequences, data_path):
 
 
 def collect_data(action_name, no_sequences):
-    sequence_length = 30
+    sequence_length = 20
     cap = cv2.VideoCapture(0)
     manage_folders(action_name, no_sequences, DATA_PATH)
     with mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=0.5) as holistic:
@@ -152,7 +150,7 @@ def build_and_train_NN(action, no_sequences):
 
     for sequence in range(no_sequences):
         window = []
-        for frame_num in range(30):
+        for frame_num in range(20):
             res = np.load(os.path.join(DATA_PATH, action, str(sequence), "{}.npy".format(frame_num)))
             window.append(res)
         sequences.append(window)
@@ -183,24 +181,13 @@ def build_and_train_NN(action, no_sequences):
 
 
 def send_model_via_api(new_recording_name, model):
-    # Create a socket object
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-    # Define the address and port to connect
     host = server_address
-    port = 12345
-
+    port = server_port
     try:
-        # Connect to the server
         s.connect((host, port))
-
-        # Send the model name
         s.sendall(new_recording_name.encode('utf-8'))
-
-        # Serialize and send the trained model
         model_bytes = pickle.dumps(model)
         s.sendall(model_bytes)
-
     finally:
-        # Close the socket
         s.close()

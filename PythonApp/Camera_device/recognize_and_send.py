@@ -106,19 +106,17 @@ def recognize():
 
             keypoints = extract_keypoints(results)
             sequence.append(keypoints)
-            sequence = sequence[-30:]
+            sequence = sequence[-20:]
 
-            if len(sequence) == 30:
+            if len(sequence) == 20:
                 input_tensor_index = model.get_input_details()[0]['index']
                 model.set_tensor(input_tensor_index, np.expand_dims(sequence, axis=0).astype(np.float32))
 
                 model.invoke()
 
-                # Assuming output_tensor_index is the index of the output tensor
                 output_tensor_index = model.get_output_details()[0]['index']
                 res = model.get_tensor(output_tensor_index)[0]
 
-                # 3. Viz logic
                 if res[np.argmax(res)] > threshold:
                     command = actions[np.argmax(res)]
                     print(command)

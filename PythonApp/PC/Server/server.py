@@ -10,7 +10,7 @@ def execute_action():
     try:
         # Receive the action name from the client
         action_name = request.json.get('command')
-        if check_if_app_is_active():
+        if check_if_active():
             print(action_name)
         else:
             print("App is not active")
@@ -24,7 +24,7 @@ def execute_action():
 def start_server(port):
     app.run(host='0.0.0.0', port=port, threaded=True)
 
-def check_if_app_is_active():
+def check_if_active():
     try:
         with open('../UI/status.json') as f:
             data = json.load(f)

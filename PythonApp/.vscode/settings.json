@@ -1,0 +1,3 @@
+{
+  "python.analysis.extraPaths": ["./PC/UI/UI_structures"]
+}

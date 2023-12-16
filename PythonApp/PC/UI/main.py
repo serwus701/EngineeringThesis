@@ -1,12 +1,12 @@
 import tkinter as tk
 import json
-import constans
 import add_new_recording
-import structures
+import UI_structures.structures as structures
 import os
 import sys
 
 global new_recording_name_var
+global repetitions_num_var
 global app_status_toggle
 global status
 global listed_recordings
@@ -30,10 +30,11 @@ def read_status_from_json():
 
 def add_new_recording_onclick():
     new_recording_name = new_recording_name_var.get()
+    repetitions_num = repetitions_num_var.get()
     recordings_toggle.update({new_recording_name:  False })
     save_status()
-    add_new_recording.collect_data(new_recording_name, 3)
-    model = add_new_recording.build_and_train_NN(new_recording_name, 3)
+    add_new_recording.collect_data(new_recording_name, int(repetitions_num))
+    model = add_new_recording.build_and_train_NN(new_recording_name, int(repetitions_num_var))
     add_new_recording.send_model_via_api(new_recording_name, model)
     new_recording_name_var.set("")
     restart_program()
@@ -111,7 +112,7 @@ def restart_program():
 
 if __name__ == '__main__':
     status = read_status_from_json()
-    app_status_toggle = status.get("app_status", constans.app_status_toggle)
+    app_status_toggle = status.get("app_status", True)
     recorded_actions_availability.update(status.get("action_availability", {}))
     for recording in status.get("dropdowns", {}):
         recordings_toggle.update({recording: status.get("dropdowns", {}).get(recording, {}).get("active", True)})
@@ -127,8 +128,9 @@ if __name__ == '__main__':
 
     structures.create_on_button_panel(main_window_root, app_status_toggle, app_status_onclick)
     new_recording_name_var = tk.StringVar()
+    repetitions_num_var = tk.StringVar()
 
-    structures.create_add_recording_panel(main_window_root, add_new_recording_onclick, new_recording_name_var)
+    structures.create_add_recording_panel(main_window_root, add_new_recording_onclick, new_recording_name_var, repetitions_num_var)
     structures.create_save_button_panel(main_window_root, save_status)
 
     main_window_root.protocol("WM_DELETE_WINDOW", lambda root=main_window_root: on_close(root))
